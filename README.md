@@ -10,13 +10,14 @@ ADALM2000をDockerコンテナから制御するための開発環境を提供�
 
 - Docker
 - ADALM2000ハードウェア
-- USBポート（ADALM2000接続用）
+- Ethernet接続（ADALM2000接続用）
+- ADALM2000のIPアドレス設定
 
 ## インストール方法
 
 1. リポジトリのクローン:
 ```bash
-git clone https://github.com/[あなたのGitHubアカウント名]/[リポジトリ名].git
+git clone https://github.com/mochimaki/m2k_Dockerfile.git
 cd [リポジトリ名]
 ```
 
@@ -29,8 +30,7 @@ docker build -t adalm2000-env .
 
 1. コンテナの起動:
 ```bash
-docker run -it --privileged \
-  --device=/dev/bus/usb:/dev/bus/usb \
+docker run -it --network host \
   adalm2000-env
 ```
 
@@ -39,8 +39,8 @@ docker run -it --privileged \
 import libm2k
 import numpy as np
 
-# ADALM2000の初期化
-ctx = libm2k.m2kOpen()
+# ADALM2000の初期化（IPアドレスを指定）
+ctx = libm2k.m2kOpen("ip:192.168.2.1")  # ADALM2000のIPアドレスを指定
 if ctx is None:
     print("ADALM2000が見つかりません")
     exit(1)
@@ -54,6 +54,12 @@ ain.setRange(libm2k.ANALOG_IN_CHANNEL_1, -10, 10)
 data = ain.getSamples(1000)
 print(data)
 ```
+
+### 注意事項
+- ADALM2000はEthernet経由で接続する必要があります
+- コンテナ起動時は`--network host`オプションを使用してホストのネットワークを使用
+- ADALM2000のIPアドレスは適切に設定されている必要があります
+- USBポートはホストPCで管理されるため、コンテナからは直接アクセスできません
 
 ## 機能
 
