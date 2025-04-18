@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2025 mochimaki
+Copyright (c) 2024 mochimaki
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,19 +20,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-NOTICE:
-This project uses the following third-party software:
+## Third-Party Licenses
 
-1. libiio
-   - Copyright (c) Analog Devices, Inc.
-   - Licensed under GNU Lesser General Public License v2 or later
-   - Source: https://github.com/analogdevicesinc/libiio
+This project depends on the following third-party software:
 
-2. libm2k
-   - Copyright (c) Analog Devices, Inc.
-   - Licensed under GNU General Public License v2 or later
-   - Source: https://github.com/analogdevicesinc/libm2k
+- libiio: GNU Lesser General Public License Version 2.1
+  - Full license text: [COPYING.txt](https://github.com/analogdevicesinc/libiio/blob/main/COPYING.txt)
+- libm2k: GNU General Public License v2
+  - Full license text: [LICENSE](https://github.com/analogdevicesinc/libm2k/blob/main/LICENSE)
 
-Commercial use of libiio and libm2k may require a separate license agreement 
-with Analog Devices. Please refer to:
-https://www.analog.com/jp/lp/001/analog_devices_software_license_agreement.html
+### Commercial Use Notice
+
+Commercial use of libiio and libm2k may require a separate license agreement with Analog Devices.
+Please refer to the [Analog Devices Software License Agreement](https://www.analog.com/jp/lp/001/analog_devices_software_license_agreement.html) for details.

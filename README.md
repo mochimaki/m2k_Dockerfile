@@ -71,18 +71,16 @@ print(data)
 
 ## ライセンス
 
-このプロジェクトはMITライセンスの下で公開されています。詳細は[LICENSE](LICENSE)ファイルを参照してください。
+このプロジェクトはMITライセンスの下で公開されています。詳細は[LICENSE](LICENSE.md)ファイルを参照してください。
 
 ### 依存ライブラリのライセンス
 
 このプロジェクトは以下のライブラリに依存しています：
 
-- libiio: GNU Lesser General Public License v2以降
-- libm2k: GNU General Public License v2以降
-
-各ライブラリのライセンス全文は以下のファイルを参照してください：
-- [COPYING.LGPL](COPYING.LGPL)
-- [COPYING.GPL](COPYING.GPL)
+- libiio: GNU Lesser General Public License Version 2.1
+  - ライセンス全文: [COPYING.txt](https://github.com/analogdevicesinc/libiio/blob/main/COPYING.txt)
+- libm2k: GNU General Public License v2
+  - ライセンス全文: [LICENSE](https://github.com/analogdevicesinc/libm2k/blob/main/LICENSE)
 
 ### 商用利用に関する注意
 
