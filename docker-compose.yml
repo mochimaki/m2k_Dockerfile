@@ -1,0 +1,55 @@
+services:
+  adalm2000:
+    build: .
+    image: adalm2000-env:latest
+    network_mode: host
+    volumes:
+      - ./test:/home/m2k/test
+      - ./version_info:/home/m2k/version_info:rw
+    working_dir: /home/m2k/test
+    user: m2k
+    environment:
+      - PATH=/home/m2k/venv/m2k/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      - VIRTUAL_ENV=/home/m2k/venv/m2k
+    command: |
+      /bin/bash -c '
+      set -e
+      # rootとして所有権を変更（sudoを使用）
+      sudo -n chown -R m2k:m2k /home/m2k
+      # パーミッション変更（一般ユーザーで実行）
+      chmod -R 755 /home/m2k/test # アプリケーションルート以下にパーミッションを設定
+      find /home/m2k/test -type d -exec chmod 777 {} \; # サブディレクトリのパーミッションを設定
+      find /home/m2k/test -type f -exec chmod 666 {} \; # ファイルのパーミッションを設定
+      echo "Current working directory: $${pwd}"
+      ls -la
+      echo "Detecting Python version..."
+      RAW_VERSION="$$(python3 --version)"
+      FULL_VERSION="$${RAW_VERSION#Python }"
+      PY_VER="$$(echo $${FULL_VERSION} | cut -d. -f1,2)"
+      echo "Detected Python version: $${PY_VER}"
+      # 仮想環境のセットアップ
+      echo "Setting up virtual environment..."
+      python3 -m venv /home/m2k/venv/m2k --clear --system-site-packages
+      # 仮想環境のアクティベーション
+      source /home/m2k/venv/m2k/bin/activate
+      echo "Installing requirements..."
+      pip install --no-cache-dir -r /home/m2k/test/requirements.txt
+      # バージョン情報ディレクトリの作成
+      mkdir -p /home/m2k/version_info
+      # パッケージリストを保存
+      pip freeze > /home/m2k/version_info/installed_packages.txt
+      # build_versions.txtをコピー
+      cp -f /opt/version_info/build_versions.txt /home/m2k/version_info/ || echo "build_versions.txt not found"
+      # PYTHONPATHの設定
+      # m2k環境のPYTHONPATH設定
+      export PYTHONPATH="/usr/local/lib/python${PY_VER}/dist-packages:/usr/local/lib/python${PY_VER}/site-packages:/usr/lib/python${PY_VER}/dist-packages:/usr/lib/python${PY_VER}/site-packages:/home/m2k/venv/m2k/lib/python${PY_VER}/site-packages"
+      echo "PYTHONPATH set to: ${PYTHONPATH}"
+      echo "Testing libm2k..."
+      python3 -c "import libm2k; print(f\"libm2k path: {libm2k.__file__}\")"
+      cd /home/m2k/test/
+      # コンテナを継続実行するためにtailコマンドを追加
+      tail -f /dev/null
+      '
+networks:
+  default:
+    driver: bridge

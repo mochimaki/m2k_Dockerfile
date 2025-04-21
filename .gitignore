@@ -2,3 +2,6 @@
 .docker/
 *.log
 
+# 自動生成されるファイル
+version_info/
+
