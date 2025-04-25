@@ -17,6 +17,16 @@ This repository provides a Docker environment for controlling the ADALM2000.
 
 To easily install Docker and Docker Compose, we recommend installing [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
+## Docker Hub Image
+
+A pre-built Docker image is available on Docker Hub:
+
+```bash
+docker pull mochimaki/adalm2000-env:latest
+```
+
+This image contains all the necessary libraries and configurations for ADALM2000 control. You can use this image directly or build from source as described below.
+
 ## Startup Methods
 
 ### Quick Start (Recommended)
