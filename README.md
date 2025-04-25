@@ -1,177 +1,147 @@
 # ADALM2000 Docker Environment
 
-ADALM2000をDockerコンテナから制御するための開発環境を提供するDockerfileです。
+This repository provides a Docker environment for controlling the ADALM2000.
 
-## 概要
+## Features
 
-このプロジェクトは、Analog DevicesのADALM2000をDockerコンテナから制御するための環境を構築します。libiioとlibm2kライブラリを使用して、ADALM2000の機能にアクセスできます。
+- Pre-built libraries required for ADALM2000 control (libiio, libm2k)
+- Pre-configured Python environment
 
-## 必要条件
+## Prerequisites
 
 - Docker
 - Docker Compose
-- ADALM2000ハードウェア
-- Ethernet接続（ADALM2000接続用）
-- ADALM2000のIPアドレス設定
+- ADALM2000 device
 
-## インストール方法
+### Setup Method
 
-1. リポジトリのクローン:
+To easily install Docker and Docker Compose, we recommend installing [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+
+## Usage
+
+1. Clone the repository:
 ```bash
-git clone https://github.com/mochimaki/m2k_Dockerfile.git
+git clone https://github.com/mochimaki/m2k_Dockerfile
 cd m2k_Dockerfile
 ```
 
-2. Dockerイメージのビルド:
-```bash
-docker build -t adalm2000-env .
-```
-
-または、Docker Composeを使用してビルドと起動を行う:
+2. Start the container:
 ```bash
 docker-compose up -d
 ```
 
-## 使用方法
-
-### 基本的な使用方法
-
-1. コンテナの起動:
-```bash
-docker-compose up -d
-```
-
-2. コンテナへのログイン:
+3. Connect to the container:
 ```bash
 docker exec -it m2k_github-adalm2000-1 bash
 ```
 
-3. テストディレクトリへの移動とスクリプトの実行:
-```bash
-cd /home/m2k/test
-python3 analog_test.py
+## Using Analog Devices Sample Programs
+
+When using [Analog Devices sample programs](https://github.com/analogdevicesinc/libm2k/tree/master/bindings/python/examples), please note the following:
+
+### 1. Connection Method
+
+Sample programs connect as follows:
+```python
+ctx = libm2k.m2kOpen()  # Assumes execution on host PC
 ```
 
-### サンプルプログラムの説明
+When executing from a container, you need to specify the IP address:
+```python
+ctx = libm2k.m2kOpen("ip:192.168.2.1")  # Specify ADALM2000 IP address
+```
 
-`test/analog_test.py`は以下の機能を提供します：
+### 2. Graphical Display Options
+
+Some sample programs use `matplotlib` to display graphs, but you cannot directly control the host PC's display from the container. Please choose one of the following two methods:
+
+#### Method A: Save to CSV and Visualize with Spreadsheet Software (Recommended)
+The simplest method. Basic Python knowledge is sufficient.
 
 ```python
-import libm2k
+import csv
 import numpy as np
 
-def main():
-    # ADALM2000の初期化（IPアドレスを指定）
-    ctx = libm2k.m2kOpen("ip:192.168.2.1")  # ADALM2000のIPアドレスを指定
-    if ctx is None:
-        print("ADALM2000が見つかりません")
-        return
+# Get data
+data = ctx.getSamples(1000)  # Example: Get 1000 samples
 
-    try:
-        # アナログ入力の設定
-        ain = ctx.getAnalogIn()
-        ain.setSampleRate(100000)
-        ain.setRange(libm2k.ANALOG_IN_CHANNEL_1, -10, 10)
-
-        # データの取得
-        data = ain.getSamples(1000)
-        print("取得したデータ:", data)
-
-    finally:
-        # リソースの解放
-        ctx.close()
-
-if __name__ == "__main__":
-    main()
+# Save to CSV file
+with open('measurement_data.csv', 'w', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerow(['Time', 'Value'])  # Header
+    for i, value in enumerate(data):
+        writer.writerow([i, value])
 ```
 
-### 環境設定
+You can open the saved CSV file with common tools such as:
+- Microsoft Excel
+- LibreOffice Calc
+- Google Sheets
 
-1. 必要なPythonパッケージのインストール:
-```bash
-cd /home/m2k/test
-pip install -r requirements.txt
-```
+##### Visualization Example (Excel)
+1. Open the CSV file in Excel
+2. Select the data
+3. Choose "Chart" from the "Insert" tab
+4. Select line chart or scatter plot
 
-2. 仮想環境の確認:
-```bash
-which python3  # /home/m2k/venv/m2k/bin/python3 を表示するはず
-```
+#### Method B: Web Application (Using Flet)
+This method is for users with Python knowledge. No front-end skills are required.
 
-### バージョン情報
+[Flet](https://flet.dev/) allows you to create web applications using only Python. Flet enables you to build web application UIs with Python code and easily visualize data.
 
-コンテナ起動時に、以下のバージョン情報が`version_info`ディレクトリに自動的に出力されます：
+### ADALM2000 IP Address Configuration
 
-1. `build_versions.txt`: ビルド時の各コンポーネントのバージョン情報
-   - Ubuntu, Python, CMake, GCC, SWIGなどのバージョン
-   - libiio, libm2kなどの依存ライブラリのバージョン
-   - ビルド日時
+If you need to use multiple ADALM2000 devices or change network settings, please refer to the [ADALM2000 Configuration Guide](https://wiki.analog.com/university/tools/m2k/common/customizing?redirect=1).
 
-2. `installed_packages.txt`: Pythonの仮想環境にインストールされているパッケージのリスト
-   - libm2k, numpy, setuptoolsなどのパッケージバージョン
+## Notes
 
-これらのファイルは、環境の再現性を確保し、トラブルシューティングを支援するために使用できます。
+- For graphical output, choose one of the two methods above:
+  1. Save to CSV and visualize with spreadsheet software (easy)
+  2. Create a web application using Flet (Python knowledge required)
 
-### 注意事項
-- ADALM2000はEthernet経由で接続する必要があります
-- コンテナ起動時は`--network host`オプションを使用してホストのネットワークを使用
-- ADALM2000のIPアドレスは適切に設定されている必要があります
-- USBポートはホストPCで管理されるため、コンテナからは直接アクセスできません
+## License
 
-## 機能
+MIT License
 
-- libiioとlibm2kライブラリの統合
-- Python開発環境
-- USBデバイスへのアクセス
-- アナログ入力/出力制御
-- デジタル入力/出力制御
+## Features
 
-## ライセンス
+- Integration of libiio and libm2k libraries
+- Python development environment
+- USB device access
+- Analog input/output control
+- Digital input/output control
 
-このプロジェクトはMITライセンスの下で公開されています。詳細は[LICENSE](LICENSE.md)ファイルを参照してください。
+## License
 
-### 依存ライブラリのライセンス
+This project is published under the MIT License. For details, please see the [LICENSE](LICENSE.md) file.
 
-このプロジェクトは以下のライブラリに依存しています：
+### Dependent Library Licenses
+
+This project depends on the following libraries:
 
 - libiio: GNU Lesser General Public License Version 2.1
-  - ライセンス全文: [COPYING.txt](https://github.com/analogdevicesinc/libiio/blob/main/COPYING.txt)
+  - Full license text: [COPYING.txt](https://github.com/analogdevicesinc/libiio/blob/main/COPYING.txt)
 - libm2k: GNU General Public License v2
-  - ライセンス全文: [LICENSE](https://github.com/analogdevicesinc/libm2k/blob/main/LICENSE)
+  - Full license text: [LICENSE](https://github.com/analogdevicesinc/libm2k/blob/main/LICENSE)
 
-### 商用利用に関する注意
+### Commercial Use Notice
 
-libiioおよびlibm2kの商用利用には、Analog Devicesとの別途ライセンス契約が必要な場合があります。
-詳細は[Analog Devicesのライセンス条項](https://www.analog.com/jp/lp/001/analog_devices_software_license_agreement.html)を参照してください。
+Commercial use of libiio and libm2k may require a separate license agreement with Analog Devices.
+Please refer to [Analog Devices License Terms](https://www.analog.com/jp/lp/001/analog_devices_software_license_agreement.html) for details.
 
-## トラブルシューティング
+## Contributing
 
-1. USBデバイスが認識されない場合:
-   - ホストマシンで`lsusb`コマンドを実行し、ADALM2000が認識されているか確認
-   - Dockerコンテナに`--privileged`フラグが付いているか確認
-   - USBデバイスのパーミッションを確認
+1. Fork this repository
+2. Create a new branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Create a Pull Request
 
-2. ライブラリのインポートエラー:
-   - Python環境が正しく設定されているか確認
-   - 必要なライブラリがインストールされているか確認
-
-3. コンテナが起動しない場合:
-   - Docker Composeのログを確認: `docker-compose logs`
-   - コンテナの状態を確認: `docker-compose ps`
-
-## コントリビューション
-
-1. このリポジトリをフォーク
-2. 新しいブランチを作成 (`git checkout -b feature/amazing-feature`)
-3. 変更をコミット (`git commit -m 'Add some amazing feature'`)
-4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
-5. プルリクエストを作成
-
-## 作者
+## Author
 
 mochimaki
 
-## 謝辞
+## Acknowledgments
 
-- Analog Devices Inc. - ADALM2000ハードウェアとライブラリの提供
-- libiioとlibm2kの開発チーム
+- Analog Devices Inc. - For providing ADALM2000 hardware and libraries
+- The libiio and libm2k development teams

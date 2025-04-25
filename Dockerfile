@@ -1,4 +1,4 @@
-# ベース開発環境ステージ
+# Base development environment stage
 FROM ubuntu:latest AS base-dev
 RUN apt-get update && apt-get upgrade -y && \
     apt-get install -y git cmake swig g++ \
@@ -7,7 +7,7 @@ RUN apt-get update && apt-get upgrade -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# libiioビルドステージ
+# libiio build stage
 FROM base-dev AS libiio-builder
 WORKDIR /usr/src
 ARG LIBIIO_VERSION
@@ -23,7 +23,7 @@ RUN git clone https://github.com/analogdevicesinc/libiio.git && \
     rm -rf libiio && \
     echo "LIBIIO_VERSION=${LIBIIO_VERSION_VAL}" > /tmp/versions.txt
 
-# libm2kビルドステージ（Python用）
+# libm2k build stage (for Python)
 FROM libiio-builder AS libm2k-python-builder
 RUN apt-get update && apt-get upgrade -y && \
     apt-get install -y python3-dev python3-setuptools && \
@@ -46,7 +46,7 @@ RUN git clone https://github.com/analogdevicesinc/libm2k.git && \
     rm -rf libm2k && \
     echo "LIBM2K_VERSION=${LIBM2K_VERSION_VAL}" >> /tmp/versions.txt
 
-# バージョン情報収集ステージ
+# Version information collection stage
 FROM libm2k-python-builder AS version-collector
 RUN mkdir -p /opt/version_info && \
     echo "BUILD_DATE=$(date -u +'%Y-%m-%d %H:%M:%S UTC')" > /opt/version_info/build_versions.txt && \
@@ -60,37 +60,37 @@ RUN mkdir -p /opt/version_info && \
     echo "LIBAVAHI_CLIENT_VERSION=$(dpkg -s libavahi-client3 | grep Version | awk '{print $2}')" >> /opt/version_info/build_versions.txt && \
     cat /tmp/versions.txt >> /opt/version_info/build_versions.txt
 
-# Python環境ステージ
+# Python environment stage
 FROM ubuntu:latest as stage-1
 
-# システムのアップデートと必要なパッケージのインストール
+# System update and installation of required packages
 RUN apt-get update && apt-get upgrade -y && \
     apt-get install -y python3 python3-pip python3-venv \
     libusb-1.0-0 libavahi-client3 libxml2 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists*
 
-# ビルドステージからファイルをコピー
+# Copy files from build stage
 COPY --from=version-collector /usr/local /usr/local
 COPY --from=version-collector /etc/ld.so.conf.d /etc/ld.so.conf.d
 COPY --from=version-collector /opt/version_info /opt/version_info
 
-# 共有ライブラリのキャッシュを更新
+# Update shared library cache
 RUN ldconfig
 
-# m2kユーザー環境ステージ
+# m2k user environment stage
 FROM stage-1 as stage-2
 
-# m2kユーザーの設定と必要なディレクトリの作成
+# m2k user setup and required directory creation
 RUN apt-get update && \
     apt-get install -y sudo && \
     groupadd -r m2k && \
     useradd -r -g m2k -m m2k && \
-    # 上書き（/etc/sudoers.d/m2k）
+    # Overwrite (/etc/sudoers.d/m2k)
     echo "m2k ALL=(ALL) NOPASSWD: /usr/bin/chown -R m2k\:m2k /home/m2k" > /etc/sudoers.d/m2k && \
-    # 追加
+    # Add
     echo "m2k ALL=(ALL) NOPASSWD: /usr/bin/chown -R m2k\:m2k /home/m2k/**" >> /etc/sudoers.d/m2k && \
-    # 追加
+    # Add
     echo "m2k ALL=(ALL) NOPASSWD: /usr/bin/cat /etc/sudoers.d/m2k" >> /etc/sudoers.d/m2k && \
     chmod 440 /etc/sudoers.d/m2k && \
     mkdir -p /home/m2k && \
