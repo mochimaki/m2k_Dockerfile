@@ -17,7 +17,11 @@ This repository provides a Docker environment for controlling the ADALM2000.
 
 To easily install Docker and Docker Compose, we recommend installing [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
-## Usage
+## Startup Methods
+
+### Quick Start (Recommended)
+
+The easiest and recommended method using docker-compose.
 
 1. Clone the repository:
 ```bash
@@ -34,6 +38,39 @@ docker-compose up -d
 ```bash
 docker exec -it m2k_github-adalm2000-1 bash
 ```
+
+### Advanced Startup Method
+
+Alternative method using docker run for more detailed configuration.
+
+1. Basic startup:
+```bash
+docker run -it --rm mochimaki/adalm2000-env:latest /bin/bash
+```
+
+2. Startup with mounts and environment variables:
+```bash
+docker run -it --rm \
+  -v $(pwd)/test:/home/m2k/test \
+  -v $(pwd)/version_info:/home/m2k/version_info:rw \
+  -e PATH=/home/m2k/venv/m2k/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+  -e VIRTUAL_ENV=/home/m2k/venv/m2k \
+  -w /home/m2k/test \
+  -u m2k \
+  mochimaki/adalm2000-env:latest \
+  /bin/bash
+```
+
+#### Notes
+
+- When using docker run, you need to manually set up mounts and environment variables
+- Virtual environment setup must be done manually
+- The container will stop when the shell exits
+
+### Recommendations
+
+- Use docker-compose for normal usage
+- Use docker run only when customization or detailed configuration is needed
 
 ## Using Analog Devices Sample Programs
 
